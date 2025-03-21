@@ -190,7 +190,7 @@
                     Song: track.trackName,
                     Album: album.collectionName,
                     Year: new Date(album.releaseDate).getFullYear(),
-                    Length: track.trackTimeMillis / 1000, // Convert ms to seconds
+                    Length: (track.trackTimeMillis / 1000).toFixed(0), // Convert ms to seconds
                     Artist: track.artistName,
                     TrackNum: track.trackNumber
                 }));
@@ -262,7 +262,10 @@
                 const button = document.createElement("button");
                 const feedback = getFeedback(category, song[category], correctSong[category]);
                 guess.feedback[category] = feedback;
-                button.innerHTML = `<span class="button-text">${category.charAt(0).toUpperCase() + category.slice(1)}: ${song[category]}</span><br><span class="button-text">(${feedback})</span>`;
+                if (category === 'Length'){
+                    button.innerHTML = `<span class="button-text">${category.charAt(0).toUpperCase() + category.slice(1)}: ${song[category]}s</span><br><span class="button-text">(${feedback})</span>`;}
+                else {
+                    button.innerHTML = `<span class="button-text">${category.charAt(0).toUpperCase() + category.slice(1)}: ${song[category]}</span><br><span class="button-text">(${feedback})</span>`;}
                 button.className = getFeedbackColor(feedback);
                 container.appendChild(button);
             });
@@ -315,7 +318,7 @@
                     <td>${song.Song}</td>
                     <td>${song.Album}</td>
                     <td>${song.Year}</td>
-                    <td>${song.Length.toFixed(0)}s</td>
+                    <td>${song.Length}s</td>
                     <td>${song.Artist}</td>
                     <td>${song.TrackNum}</td>
                 `;
