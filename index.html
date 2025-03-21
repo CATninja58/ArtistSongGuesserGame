@@ -264,7 +264,13 @@
                 if (diff === 0) return 'correct';
                 if (diff <= 30) return guessLength < correctLength ? 'close v' : 'close ^';
                 return guessLength < correctLength ? 'shorter v' : 'longer ^';
-            
+            } else if (category === 'TrackNum'){
+                const guessTrackNum = parseInt(guessValue);
+                const correctTrackNum = parseInt(correctValue);
+                const diff = Math.abs(guessTrackNum - correctTrackNum);
+                if (diff === 0) return 'correct';
+                if (diff <= 5) return guessTrackNum < correctTrackNum ? 'close v' : 'close ^';
+                return guessTrackNum < correctTrackNum ? 'lower v' : 'higher ^';
             } else {
                 return guessValue === correctValue ? 'correct' : 'wrong';
             }
@@ -286,7 +292,7 @@
                     <td>${song.Song}</td>
                     <td>${song.Album}</td>
                     <td>${song.Year}</td>
-                    <td>${song.Length.toFixed(2)}s</td>
+                    <td>${song.Length.toFixed(0)}s</td>
                     <td>${song.Artist}</td>
                     <td>${song.TrackNum}</td>
                 `;
