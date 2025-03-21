@@ -127,13 +127,14 @@
                         <th style="min-width: 250px;">Release</th>
                         <th style="min-width: 200px;">Length</th>
                         <th style="min-width: 200px;">Artist</th>
-                        <th style="min-width: 200px;">Track Num</th>
+                        <th style="min-width: 200px;">TrackNum</th>
                     </tr>
                 </thead>
                 <tbody id="songList"></tbody>
             </table>
         </div>
     </div>
+    <div class="footer-text">Made by u/CATninja58. Soundmap user: jeddosterives</div>
 
     <script>
         let songsData = [];
@@ -141,8 +142,8 @@
         let guesses = [];
         let guessCount = 0;
 
-        async function findDataFromArtist(artist) {
-            const searchUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=musicArtist&limit=1`;
+        async function findDataFromArtist(Artist) {
+            const searchUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(Artist)}&entity=musicArtist&limit=1`;
             const searchResponse = await fetch(searchUrl);
             const searchData = await searchResponse.json();
 
@@ -165,12 +166,12 @@
                 const tracksData = await tracksResponse.json();
 
                 const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
-                    songName: track.trackName,
+                    Song: track.trackName,
                     Album: album.collectionName,
                     Year: new Date(album.releaseDate).getFullYear(),
-                    length: formatLength(track.trackTimeMillis / 1000), // Convert ms to seconds and format
-                    artist: track.artistName,
-                    trackNumber: track.trackNumber
+                    Length: track.trackTimeMillis / 1000, // Convert ms to seconds
+                    Artist: track.artistName,
+                    TrackNum: track.TrackNum
                 }));
 
                 songsList = songsList.concat(tracks);
@@ -179,15 +180,9 @@
             return songsList;
         }
 
-        function formatLength(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
-
         async function loadSongs() {
             songsData = await findDataFromArtist('Kanye West');
-            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+            correctSong = songsData[Math.floor(Math.random() * songsData.Length)];
             displaySongs();
         }
 
@@ -197,12 +192,12 @@
             searchResults.innerHTML = '';
 
             if (query) {
-                const matches = songsData.filter(song => song.songName.toLowerCase().includes(query));
+                const matches = songsData.filter(song => song.Song.toLowerCase().includes(query));
                 matches.forEach(match => {
                     const resultDiv = document.createElement("div");
-                    resultDiv.textContent = match.songName;
+                    resultDiv.textContent = match.Song;
                     resultDiv.onclick = () => {
-                        makeGuess(match.songName);
+                        makeGuess(match.Song);
                         document.getElementById("songSearch").value = '';
                         searchResults.innerHTML = '';
                     };
@@ -211,8 +206,8 @@
             }
         }
 
-        function makeGuess(songName) {
-            const song = songsData.find(song => song.songName === songName);
+        function makeGuess(Song) {
+            const song = songsData.find(song => song.Song === Song);
             if (song) {
                 guessCount++;
                 const guessesContainer = document.getElementById("guessesContainer");
@@ -222,9 +217,9 @@
                 guessTitle.textContent = `Guess #${guessCount}`;
                 guessesContainer.appendChild(guessTitle);
 
-                const songNameDiv = document.createElement("div");
-                songNameDiv.textContent = song.songName;
-                guessesContainer.appendChild(songNameDiv);
+                const SongDiv = document.createElement("div");
+                SongDiv.textContent = song.Song;
+                guessesContainer.appendChild(SongDiv);
 
                 const guessBoxes = document.createElement("div");
                 guessBoxes.classList.add("button-container");
@@ -239,7 +234,7 @@
         }
 
         function provideFeedback(song, container, guess) {
-            const categories = ["Album", "Year", "Length", "Artist", "Track Number"];
+            const categories = ["Album", "Year", "Length", "Artist", "TrackNum"];
             categories.forEach(category => {
                 const button = document.createElement("button");
                 const feedback = getFeedback(category, song[category], correctSong[category]);
@@ -249,7 +244,7 @@
                 container.appendChild(button);
             });
 
-            if (song.songName === correctSong.songName) {
+            if (song.Song === correctSong.Song) {
                 alert("Congratulations! You've guessed the correct song!");
             }
         }
@@ -260,23 +255,16 @@
                 const correctYear = parseInt(correctValue);
                 const diff = Math.abs(guessYear - correctYear);
                 if (diff === 0) return 'correct';
-                if (diff <= 5) return guessYear > correctYear ? 'close v' : 'close ^';
+                if (diff <= 1) return guessYear > correctYear ? 'close v' : 'close ^';
                 return guessYear < correctYear ? 'later ^' : 'earlier v';
             } else if (category === 'Length') {
-                const guessLength = parseInt(guessValue.split(':').reduce((acc, time) => (60 * acc) + +time));
-                const correctLength = parseInt(correctValue.split(':').reduce((acc, time) => (60 * acc) + +time));
+                const guessLength = parseInt(guessValue);
+                const correctLength = parseInt(correctValue);
                 const diff = Math.abs(guessLength - correctLength);
                 if (diff === 0) return 'correct';
                 if (diff <= 10) return guessLength < correctLength ? 'close v' : 'close ^';
                 return guessLength < correctLength ? 'shorter v' : 'longer ^';
-            } else if (category === 'Track Number'){
-                const guessTrackNum = parseInt(guessValue);
-                const correctTrackNum = parseInt(correctValue);
-                const diff = Math.abs(guessTrackNum - correctTrackNum);
-                if (diff === 0) return 'correct';
-                if (diff <= 5) return guessTrackNum < correctTrackNum ? 'close v' : 'close ^';
-                return guessTrackNum < correctTrackNum ? 'lower v' : 'higher ^';
-            } else if (category === 'Track Number'){
+            } else if (category === 'TrackNum'){
                 const guessTrackNum = parseInt(guessValue);
                 const correctTrackNum = parseInt(correctValue);
                 const diff = Math.abs(guessTrackNum - correctTrackNum);
@@ -301,12 +289,12 @@
             songsData.forEach(song => {
                 const songItem = document.createElement("tr");
                 songItem.innerHTML = `
-                    <td>${song.songName}</td>
+                    <td>${song.Song}</td>
                     <td>${song.Album}</td>
                     <td>${song.Year}</td>
-                    <td>${song.length}</td>
-                    <td>${song.artist}</td>
-                    <td>${song.trackNumber}</td>
+                    <td>${song.Length.toFixed(2)}s</td>
+                    <td>${song.Artist}</td>
+                    <td>${song.TrackNum}</td>
                 `;
                 songList.appendChild(songItem);
             });
