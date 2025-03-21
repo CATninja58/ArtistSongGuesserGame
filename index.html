@@ -264,13 +264,7 @@
                 if (diff === 0) return 'correct';
                 if (diff <= 10) return guessLength < correctLength ? 'close v' : 'close ^';
                 return guessLength < correctLength ? 'shorter v' : 'longer ^';
-            } else if (category === 'TrackNum'){
-                const guessTrackNum = parseInt(guessValue);
-                const correctTrackNum = parseInt(correctValue);
-                const diff = Math.abs(guessTrackNum - correctTrackNum);
-                if (diff === 0) return 'correct';
-                if (diff <= 5) return guessTrackNum < correctTrackNum ? 'close v' : 'close ^';
-                return guessTrackNum < correctTrackNum ? 'lower v' : 'higher ^';
+            
             } else {
                 return guessValue === correctValue ? 'correct' : 'wrong';
             }
