@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist's Song Guesser Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* General body styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background-color: #121212;
+            color: #f4f4f4;
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #f4f4f4;
+        }
+
+        input {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 14px;
+            width: 300px;
+            background-color: #1c1c1c;
+            color: #f4f4f4;
+            border: none;
+        }
+
+        .button-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+            height: auto;
+        }
+
+        button {
+            width: 250px;
+            height: 50px;
+            font-size: 14px;
+            background-color: #1c1c1c;
+            color: #f4f4f4;
+            border: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .green {
+            background-color: #159643;
+        }
+
+        .orange {
+            background-color: #b19600;
+        }
+
+        .grey {
+            background-color: grey;
+        }
+
+        .results-container {
+            width: 80%;
+            margin-top: 40px;
+            padding: 10px;
+            border-top: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .song-list-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            color: #f4f4f4;
+            text-align: left;
+            word-wrap: break-word;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+        .footer-text {
+            font-weight: bold;
+            margin-top: 20px;
+            color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Artist's Song Guesser Game</h1>
+
+    <input type="text" id="songSearch" placeholder="Enter song name" oninput="searchSong()">
+    <div id="searchResults"></div>
+
+    <div id="guessesContainer" class="guess-container" style="margin-top: 40px; margin-bottom: 20px; gap: 20px;">
+        <!-- Guesses will be dynamically added here -->
+    </div>
+
+    <div class="results-container">
+        <div class="footer-text" style="font-size: 16px;">List of songs</div>
+        <div class="song-list-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 300px;">Song</th>
+                        <th style="min-width: 200px;">Album</th>
+                        <th style="min-width: 250px;">Release</th>
+                        <th style="min-width: 200px;">Length</th>
+                        <th style="min-width: 200px;">Artist</th>
+                        <th style="min-width: 200px;">TrackNum</th>
+                    </tr>
+                </thead>
+                <tbody id="songList"></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="footer-text">Made by u/CATninja58. Soundmap user: jeddosterives</div>
+
+    <script>
+        let songsData = [];
+        let correctSong = null;
+        let guesses = [];
+        let guessCount = 0;
+
+        async function findDataFromArtist(artist) {
+            const searchUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=musicArtist&limit=1`;
+            const searchResponse = await fetch(searchUrl);
+            const searchData = await searchResponse.json();
+
+            if (searchData.resultCount === 0) {
+                console.error("Artist not found.");
+                return [];
+            }
+
+            const artistId = searchData.results[0].artistId;
+            const albumsUrl = `https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=50`;
+            const albumsResponse = await fetch(albumsUrl);
+            const albumsData = await albumsResponse.json();
+
+            const albums = albumsData.results.filter(item => item.collectionType === "Album");
+            let songsList = [];
+
+            for (const album of albums) {
+                const tracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
+                const tracksResponse = await fetch(tracksUrl);
+                const tracksData = await tracksResponse.json();
+
+                const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
+                    songName: track.trackName,
+                    albumName: album.collectionName,
+                    releaseYear: new Date(album.releaseDate).getFullYear(),
+                    length: track.trackTimeMillis / 1000, // Convert ms to seconds
+                    artist: track.artistName,
+                    trackNumber: track.trackNumber
+                }));
+
+                songsList = songsList.concat(tracks);
+            }
+
+            return songsList;
+        }
+
+        async function loadSongs() {
+            songsData = await findDataFromArtist('Kanye West');
+            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+            displaySongs();
+        }
+
+        function searchSong() {
+            const query = document.getElementById("songSearch").value.toLowerCase();
+            const searchResults = document.getElementById("searchResults");
+            searchResults.innerHTML = '';
+
+            if (query) {
+                const matches = songsData.filter(song => song.songName.toLowerCase().includes(query));
+                matches.forEach(match => {
+                    const resultDiv = document.createElement("div");
+                    resultDiv.textContent = match.songName;
+                    resultDiv.onclick = () => {
+                        makeGuess(match.songName);
+                        document.getElementById("songSearch").value = '';
+                        searchResults.innerHTML = '';
+                    };
+                    searchResults.appendChild(resultDiv);
+                });
+            }
+        }
+
+        function makeGuess(songName) {
+            const song = songsData.find(song => song.songName === songName);
+            if (song) {
+                guessCount++;
+                const guessesContainer = document.getElementById("guessesContainer");
+
+                const guessTitle = document.createElement("div");
+                guessTitle.classList.add("guess-title");
+                guessTitle.textContent = `Guess #${guessCount}`;
+                guessesContainer.appendChild(guessTitle);
+
+                const songNameDiv = document.createElement("div");
+                songNameDiv.textContent = song.songName;
+                guessesContainer.appendChild(songNameDiv);
+
+                const guessBoxes = document.createElement("div");
+                guessBoxes.classList.add("button-container");
+                guessBoxes.classList.add("guess-boxes");
+                guessesContainer.appendChild(guessBoxes);
+
+                const guess = { song, feedback: {} };
+                guesses.push(guess);
+
+                provideFeedback(song, guessBoxes, guess);
+            }
+        }
+
+        function provideFeedback(song, container, guess) {
+            const categories = ["albumName", "releaseYear", "length", "artist", "trackNumber"];
+            categories.forEach(category => {
+                const button = document.createElement("button");
+                const feedback = getFeedback(category, song[category], correctSong[category]);
+                guess.feedback[category] = feedback;
+                button.innerHTML = `<span class="button-text">${category.charAt(0).toUpperCase() + category.slice(1)}: ${song[category]}</span><br><span class="button-text">(${feedback})</span>`;
+                button.className = getFeedbackColor(feedback);
+                container.appendChild(button);
+            });
+
+            if (song.songName === correctSong.songName) {
+                alert("Congratulations! You've guessed the correct song!");
+            }
+        }
+
+        function getFeedback(category, guessValue, correctValue) {
+            if (category === 'releaseYear') {
+                const guessYear = parseInt(guessValue);
+                const correctYear = parseInt(correctValue);
+                const diff = Math.abs(guessYear - correctYear);
+                if (diff === 0) return 'correct';
+                if (diff <= 1) return guessYear > correctYear ? 'close v' : 'close ^';
+                return guessYear < correctYear ? 'later ^' : 'earlier v';
+            } else if (category === 'length') {
+                const guessLength = parseInt(guessValue);
+                const correctLength = parseInt(correctValue);
+                const diff = Math.abs(guessLength - correctLength);
+                if (diff === 0) return 'correct';
+                if (diff <= 10) return guessLength < correctLength ? 'close v' : 'close ^';
+                return guessLength < correctLength ? 'shorter v' : 'longer ^';
+            } else {
+                return guessValue === correctValue ? 'correct' : 'wrong';
+            }
+        }
+
+        function getFeedbackColor(feedback) {
+            if (feedback === 'correct') return 'green';
+            if (feedback.includes('close')) return 'orange';
+            return 'grey';
+        }
+
+        function displaySongs() {
+            const songList = document.getElementById("songList");
+            songList.innerHTML = '';
+
+            songsData.forEach(song => {
+                const songItem = document.createElement("tr");
+                songItem.innerHTML = `
+                    <td>${song.songName}</td>
+                    <td>${song.albumName}</td>
+                    <td>${song.releaseYear}</td>
+                    <td>${song.length.toFixed(2)}s</td>
+                    <td>${song.artist}</td>
+                    <td>${song.trackNumber}</td>
+                `;
+                songList.appendChild(songItem);
+            });
+        }
+
+        // Initialize songs on page load
+        document.addEventListener('DOMContentLoaded', loadSongs);
+    </script>
+</body>
+</html>
