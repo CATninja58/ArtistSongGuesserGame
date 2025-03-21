@@ -127,14 +127,13 @@
                         <th style="min-width: 250px;">Release</th>
                         <th style="min-width: 200px;">Length</th>
                         <th style="min-width: 200px;">Artist</th>
-                        <th style="min-width: 200px;">TrackNum</th>
+                        <th style="min-width: 200px;">Track Num</th>
                     </tr>
                 </thead>
                 <tbody id="songList"></tbody>
             </table>
         </div>
     </div>
-    <div class="footer-text">Made by u/CATninja58. Soundmap user: jeddosterives</div>
 
     <script>
         let songsData = [];
@@ -167,9 +166,9 @@
 
                 const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
                     songName: track.trackName,
-                    albumName: album.collectionName,
-                    releaseYear: new Date(album.releaseDate).getFullYear(),
-                    length: track.trackTimeMillis / 1000, // Convert ms to seconds
+                    Album: album.collectionName,
+                    Year: new Date(album.releaseDate).getFullYear(),
+                    length: formatLength(track.trackTimeMillis / 1000), // Convert ms to seconds and format
                     artist: track.artistName,
                     trackNumber: track.trackNumber
                 }));
@@ -178,6 +177,12 @@
             }
 
             return songsList;
+        }
+
+        function formatLength(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         }
 
         async function loadSongs() {
@@ -234,7 +239,7 @@
         }
 
         function provideFeedback(song, container, guess) {
-            const categories = ["albumName", "releaseYear", "length", "artist", "trackNumber"];
+            const categories = ["Album", "Year", "Length", "Artist", "Track Number"];
             categories.forEach(category => {
                 const button = document.createElement("button");
                 const feedback = getFeedback(category, song[category], correctSong[category]);
@@ -250,20 +255,27 @@
         }
 
         function getFeedback(category, guessValue, correctValue) {
-            if (category === 'releaseYear') {
+            if (category === 'Year') {
                 const guessYear = parseInt(guessValue);
                 const correctYear = parseInt(correctValue);
                 const diff = Math.abs(guessYear - correctYear);
                 if (diff === 0) return 'correct';
-                if (diff <= 1) return guessYear > correctYear ? 'close v' : 'close ^';
+                if (diff <= 5) return guessYear > correctYear ? 'close v' : 'close ^';
                 return guessYear < correctYear ? 'later ^' : 'earlier v';
-            } else if (category === 'length') {
-                const guessLength = parseInt(guessValue);
-                const correctLength = parseInt(correctValue);
+            } else if (category === 'Length') {
+                const guessLength = parseInt(guessValue.split(':').reduce((acc, time) => (60 * acc) + +time));
+                const correctLength = parseInt(correctValue.split(':').reduce((acc, time) => (60 * acc) + +time));
                 const diff = Math.abs(guessLength - correctLength);
                 if (diff === 0) return 'correct';
                 if (diff <= 10) return guessLength < correctLength ? 'close v' : 'close ^';
                 return guessLength < correctLength ? 'shorter v' : 'longer ^';
+            } else if (category === 'Track Number'){
+                const guessTrackNum = parseInt(guessValue);
+                const correctTrackNum = parseInt(correctValue);
+                const diff = Math.abs(guessTrackNum - correctTrackNum);
+                if (diff === 0) return 'correct';
+                if (diff <= 5) return guessTrackNum < correctTrackNum ? 'close v' : 'close ^';
+                return guessTrackNum < correctTrackNum ? 'lower v' : 'higher ^';
             } else {
                 return guessValue === correctValue ? 'correct' : 'wrong';
             }
@@ -283,9 +295,9 @@
                 const songItem = document.createElement("tr");
                 songItem.innerHTML = `
                     <td>${song.songName}</td>
-                    <td>${song.albumName}</td>
-                    <td>${song.releaseYear}</td>
-                    <td>${song.length.toFixed(2)}s</td>
+                    <td>${song.Album}</td>
+                    <td>${song.Year}</td>
+                    <td>${song.length}</td>
                     <td>${song.artist}</td>
                     <td>${song.trackNumber}</td>
                 `;
