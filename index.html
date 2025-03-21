@@ -168,7 +168,7 @@
                     songName: track.trackName,
                     Album: album.collectionName,
                     Year: new Date(album.releaseDate).getFullYear(),
-                    length: formatLength(track.trackTimeMillis / 1000), // Convert ms to seconds and format
+                    length: track.trackTimeMillis / 1000, // Convert ms to seconds and format
                     artist: track.artistName,
                     trackNumber: track.trackNumber
                 }));
@@ -240,11 +240,15 @@
 
         function provideFeedback(song, container, guess) {
             const categories = ["Album", "Year", "Length", "Artist", "Track Number"];
+            if (category === 'Length'){
+                categoryInfo = formatLength(track.trackTimeMillis / 1000)
+            } else {categoryInfo = song[category]}
             categories.forEach(category => {
                 const button = document.createElement("button");
                 const feedback = getFeedback(category, song[category], correctSong[category]);
                 guess.feedback[category] = feedback;
-                button.innerHTML = `<span class="button-text">${category.charAt(0).toUpperCase() + category.slice(1)}: ${song[category]}</span><br><span class="button-text">(${feedback})</span>`;
+                
+                button.innerHTML = `<span class="button-text">${category.charAt(0).toUpperCase() + category.slice(1)}: ${categoryInfo}</span><br><span class="button-text">(${feedback})</span>`;
                 button.className = getFeedbackColor(feedback);
                 container.appendChild(button);
             });
