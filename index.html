@@ -171,7 +171,7 @@
                     Year: new Date(album.releaseDate).getFullYear(),
                     Length: track.trackTimeMillis / 1000, // Convert ms to seconds
                     Artist: track.artistName,
-                    TrackNum: track.TrackNum
+                    TrackNum: track.trackNumber
                 }));
 
                 songsList = songsList.concat(tracks);
@@ -182,7 +182,7 @@
 
         async function loadSongs() {
             songsData = await findDataFromArtist('Kanye West');
-            correctSong = songsData[Math.floor(Math.random() * songsData.Length)];
+            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
             displaySongs();
         }
 
@@ -262,7 +262,7 @@
                 const correctLength = parseInt(correctValue);
                 const diff = Math.abs(guessLength - correctLength);
                 if (diff === 0) return 'correct';
-                if (diff <= 10) return guessLength < correctLength ? 'close v' : 'close ^';
+                if (diff <= 30) return guessLength < correctLength ? 'close v' : 'close ^';
                 return guessLength < correctLength ? 'shorter v' : 'longer ^';
             
             } else {
