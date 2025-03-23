@@ -130,6 +130,9 @@
         Loading Data <i class="fas fa-spinner"></i>
     </div>
 
+    <button id="hintButton" onclick="showHint()">Get a Hint</button>
+    <div id="hintText" style="display:none; font-style: italic; margin-top: 10px;"></div>
+
     <input type="text" id="songSearch" placeholder="Enter song name" oninput="searchSong()">
     <div id="searchResults"></div>
 
@@ -245,9 +248,40 @@
             document.getElementById('loadingIndicator').style.display = 'none';
 
             console.log("Finished loading data.");
+            console.log("Correct Song is: " + correctSong);
         }
 
-
+        function showHint() {
+            const hintButton = document.getElementById("hintButton");
+            const hintText = document.getElementById("hintText");
+            
+            if (!correctSong) {
+                alert("No correct song selected yet!");
+                return;
+            }
+            
+            fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(correctSong.Artist)}/${encodeURIComponent(correctSong.Song)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.lyrics) {
+                        const lines = data.lyrics.split('\n').filter(line => line.trim() !== "");
+                        if (lines.length > 0) {
+                            const randomLine = lines[Math.floor(Math.random() * lines.length)];
+                            hintText.innerText = `Hint: "${randomLine}"`;
+                        } else {
+                            hintText.innerText = "No lyrics available for this song.";
+                        }
+                    } else {
+                        hintText.innerText = "Lyrics not found.";
+                    }
+                })
+                .catch(() => {
+                    hintText.innerText = "Error fetching lyrics.";
+                });
+            
+            hintButton.style.display = "none";
+            hintText.style.display = "block";
+        }
 
         function searchSong() {
             const query = document.getElementById("songSearch").value.toLowerCase();
