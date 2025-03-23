@@ -130,6 +130,8 @@
         Loading Data <i class="fas fa-spinner"></i>
     </div>
 
+    <button onclick="resetGame()">Play Again</button>
+
     <button id="hintButton" onclick="showHint()">Get a Hint</button>
     <div id="hintText" style="display:none; font-style: italic; margin-top: 10px;"></div>
 
@@ -235,6 +237,9 @@
                 correctSong = songsData[Math.floor(Math.random() * songsData.length)];
                 displaySongs();
                 document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
+                console.log("Finished loading data.");
+                console.log("Correct Song is: " + correctSong);
                 return;
             }
 
@@ -400,6 +405,24 @@
                 songList.appendChild(songItem);
             });
         }
+
+        function resetGame() {
+            // Reset game state
+            correctSong = null;  // Reset the correct song
+            guessCount = 0;  // Reset guess count
+            guesses = [];  // Clear previous guesses
+
+            // Clear previous guesses from UI
+            document.getElementById("guessesContainer").innerHTML = '';
+
+            // Reset the song list and search results
+            document.getElementById("songList").innerHTML = '';
+            document.getElementById("searchResults").innerHTML = '';
+
+            // Reload the songs using the stored data
+            loadSongs();
+        }
+
 
         // Initialize songs on page load
         document.addEventListener('DOMContentLoaded', loadSongs);
