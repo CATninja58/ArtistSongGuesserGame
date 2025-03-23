@@ -219,42 +219,34 @@
 
         async function loadSongs() {
             const ArtistName = getArtistFromURL();
-            console.log("Artist Name from URL:", ArtistName);
+            console.log("Extracted Artist Name:", ArtistName);  // Debugging: Logs the artist name
 
             if (!ArtistName) {
                 document.body.innerHTML = "<h1>Error: No artist selected</h1>";
                 return;
             }
 
-            document.getElementById('loadingIndicator').style.display = 'flex';
-
-            try {
-                const storedData = localStorage.getItem(ArtistName);
-                if (storedData) {
-                    console.log("Loading data from localStorage...");
-                    songsData = JSON.parse(storedData);
-                } else {
-                    console.log("Fetching new data from API...");
-                    songsData = await findDataFromArtist(ArtistName);
-                    localStorage.setItem(ArtistName, JSON.stringify(songsData));
-                }
-
-                if (!songsData.length) {
-                    console.error("No songs found for this artist.");
-                    document.body.innerHTML = "<h1>Error: No songs found for this artist</h1>";
-                    return;
-                }
-
-                console.log("Song data successfully loaded.");
+            const storedData = localStorage.getItem(ArtistName);
+            if (storedData) {
+                songsData = JSON.parse(storedData);
                 correctSong = songsData[Math.floor(Math.random() * songsData.length)];
                 displaySongs();
-            } catch (error) {
-                console.error("Error loading songs:", error);
-                document.body.innerHTML = "<h1>Error loading song data. Check the console for details.</h1>";
-            } finally {
                 document.getElementById('loadingIndicator').style.display = 'none';
+                return;
             }
+
+            document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
+
+            document.getElementById('loadingIndicator').style.display = 'flex';
+            songsData = await findDataFromArtist(ArtistName);
+            localStorage.setItem(ArtistName, JSON.stringify(songsData));
+            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+            displaySongs();
+            document.getElementById('loadingIndicator').style.display = 'none';
+
+            console.log("Finished loading data.");
         }
+
 
 
         function searchSong() {
