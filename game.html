@@ -218,14 +218,26 @@
         }
 
         async function loadSongs() {
-            ArtistName = getArtistFromURL()
+            const ArtistName = getArtistFromURL();
+            console.log(ArtistName);
             if (!ArtistName) {
                 document.body.innerHTML = "<h1>Error: No artist selected</h1>";
                 return;
             }
-            document.getElementById("artistTitle").innerText = `${artistName}'s Song Guesser`;
+
+            const storedData = localStorage.getItem(ArtistName);
+            if (storedData) {
+                songsData = JSON.parse(storedData);
+                correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+                displaySongs();
+                document.getElementById('loadingIndicator').style.display = 'none';
+                return;
+            }
+
+            document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;
             document.getElementById('loadingIndicator').style.display = 'flex';
             songsData = await findDataFromArtist(ArtistName);
+            localStorage.setItem(ArtistName, JSON.stringify(songsData));
             correctSong = songsData[Math.floor(Math.random() * songsData.length)];
             displaySongs();
             document.getElementById('loadingIndicator').style.display = 'none';
