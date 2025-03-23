@@ -169,8 +169,8 @@
             const searchData = await searchResponse.json();
 
             if (searchData.resultCount === 0) {
-            console.error("Artist not found.");
-            return [];
+                console.error("Artist not found.");
+                return [];
             }
 
             const artistId = searchData.results[0].artistId;
@@ -180,59 +180,34 @@
 
             let albums = albumsData.results.filter(item => item.collectionType === "Album");
 
-            // Remove duplicate albums with different versions
-            const albumMap = new Map();
-            albums.forEach(album => {
-            const baseName = album.collectionName.replace(/\s*\(.*?\)\s*/g, '').trim();
-            if (!albumMap.has(baseName)) {
-                albumMap.set(baseName, album);
-            } else {
-                const existingAlbum = albumMap.get(baseName);
-                if (existingAlbum.trackCount === album.trackCount) {
-                // Check if the albums have the same songs
-                const existingTracksUrl = `https://itunes.apple.com/lookup?id=${existingAlbum.collectionId}&entity=song`;
-                const newTracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
-                Promise.all([fetch(existingTracksUrl), fetch(newTracksUrl)])
-                    .then(responses => Promise.all(responses.map(res => res.json())))
-                    .then(([existingTracksData, newTracksData]) => {
-                    const existingTracks = existingTracksData.results.filter(item => item.wrapperType === "track");
-                    const newTracks = newTracksData.results.filter(item => item.wrapperType === "track");
-                    if (existingTracks.length === newTracks.length && existingTracks.every((track, index) => track.trackName.split(' ')[0] === newTracks[index].trackName.split(' ')[0])) {
-                        // If the albums have the same songs, keep the original one
-                        albumMap.set(baseName, existingAlbum);
-                    } else {
-                        // If the albums have different songs, keep both
-                        albumMap.set(baseName + ' (Different Version)', album);
-                    }
-                    });
-                } else {
-                // If the albums have different track counts, keep both
-                albumMap.set(baseName + ' (Different Version)', album);
-                }
-            }
-            });
-            albums = Array.from(albumMap.values());
-
             let songsList = [];
 
             for (const album of albums) {
-            const tracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
-            const tracksResponse = await fetch(tracksUrl);
-            const tracksData = await tracksResponse.json();
+                const tracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
+                const tracksResponse = await fetch(tracksUrl);
+                const tracksData = await tracksResponse.json();
 
-            const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
-                Song: track.trackName,
-                Album: album.collectionName,
-                Year: new Date(album.releaseDate).getFullYear(),
-                Length: (track.trackTimeMillis / 1000).toFixed(0), // Convert ms to seconds
-                Artist: track.artistName,
-                TrackNum: track.trackNumber
-            }));
+                const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
+                    Song: track.trackName.replace(/\s*\(.*?\)\s*/g, '').trim(),
+                    Album: album.collectionName,
+                    Year: new Date(album.releaseDate).getFullYear(),
+                    Length: (track.trackTimeMillis / 1000).toFixed(0), // Convert ms to seconds
+                    Artist: track.artistName,
+                    TrackNum: track.trackNumber
+                }));
 
-            songsList = songsList.concat(tracks);
+                songsList = songsList.concat(tracks);
             }
 
-            return songsList;
+            // Remove duplicate songs
+            const songMap = new Map();
+            songsList.forEach(song => {
+                if (!songMap.has(song.Song)) {
+                    songMap.set(song.Song, song);
+                }
+            });
+
+            return Array.from(songMap.values());
         }
 
         async function loadSongs() {
