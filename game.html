@@ -130,7 +130,7 @@
         Loading Data <i class="fas fa-spinner"></i>
     </div>
 
-    <button onclick="resetGame()">Play Again</button>
+    <button id="resetButton" onclick="resetGame()">Play Again</button>
 
     <button id="hintButton" onclick="showHint()">Get a Hint</button>
     <div id="hintText" style="display:none; font-style: italic; margin-top: 10px;"></div>
@@ -238,7 +238,7 @@
                 document.getElementById('loadingIndicator').style.display = 'none';
                 document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
                 console.log("Finished loading data.");
-                console.log("Correct Song is: " + correctSong);
+                console.log("Correct Song is: " + correctSong.song);
                 return;
             }
 
@@ -252,7 +252,7 @@
             document.getElementById('loadingIndicator').style.display = 'none';
 
             console.log("Finished loading data.");
-            console.log("Correct Song is: " + correctSong);
+            console.log("Correct Song is: " + correctSong.song);
         }
 
         function showHint() {
@@ -426,9 +426,12 @@
             document.getElementById("searchResults").innerHTML = '';
 
             // Reload the songs using the stored data
-            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
-            displaySongs();
-            console.log("Correct Song: " + correctSong)
+            songsData = JSON.parse(storedData);
+                correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+                displaySongs();
+                console.log("Finished loading data.");
+                console.log("Correct Song is: " + correctSong.Song);
+                return;
         }
 
 
