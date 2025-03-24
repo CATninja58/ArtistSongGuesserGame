@@ -164,10 +164,9 @@
     <div class="footer-text">Made by u/CATninja58.</div>
 
     <script>
-        let songsData = [];
-        let correctSong = null;
         let guesses = [];
         let guessCount = 0;
+        let songsData = null
 
         function getArtistFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -259,17 +258,21 @@
         function showHint() {
             const hintButton = document.getElementById("hintButton");
             const hintText = document.getElementById("hintText");
-            
+
             if (!correctSong) {
                 alert("No correct song selected yet!");
                 return;
             }
-            
+
+            // Reset the hint text area before fetching new hint
+            hintText.innerText = "Loading hint...";
+
             fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(correctSong.Artist)}/${encodeURIComponent(correctSong.Song)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.lyrics) {
                         const lines = data.lyrics.split('\n').filter(line => line.trim() !== "");
+                        console.log("Lines: ", lines);  // Debugging the lines array
                         if (lines.length > 0) {
                             const randomLine = lines[Math.floor(Math.random() * lines.length)];
                             hintText.innerText = `Hint: "${randomLine}"`;
@@ -283,10 +286,12 @@
                 .catch(() => {
                     hintText.innerText = "Error fetching lyrics.";
                 });
-            
+
+            // Hide the hint button and show the hint text
             hintButton.style.display = "none";
             hintText.style.display = "block";
         }
+
 
         function searchSong() {
             const query = document.getElementById("songSearch").value.toLowerCase();
@@ -407,6 +412,7 @@
         }
 
         function resetGame() {
+            console.log("Starting new game")
             // Reset game state
             correctSong = null;  // Reset the correct song
             guessCount = 0;  // Reset guess count
@@ -420,7 +426,9 @@
             document.getElementById("searchResults").innerHTML = '';
 
             // Reload the songs using the stored data
-            loadSongs();
+            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+            displaySongs();
+            console.log("Correct Song: " + correctSong)
         }
 
 
