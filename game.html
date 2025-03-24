@@ -370,7 +370,8 @@
                 }
                 if(isLyricsMode){
                     songsData = songsData.filter(song => {
-                        lines = song.lyrics.split('\n').filter(line => line.trim() !== "");
+                        if (!song.lyrics) return false;
+                        const lines = song.lyrics.split('\n').filter(line => line.trim() !== "");
                         // Filter out songs that don't have lyrics
                         return lines.length > 0;
                     });
