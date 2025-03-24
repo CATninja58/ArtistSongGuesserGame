@@ -121,9 +121,121 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Cog icon styles */
+        .cog-icon {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            color: #f4f4f4;
+            transition: color 0.3s ease;
+        }
+
+        .cog-icon:hover {
+            color: #159643; /* Green on hover */
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: #1c1c1c;
+            transition: left 0.3s ease;
+            z-index: 999;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            visibility: hidden; /* Hide initially */
+        }
+
+        .sidebar.open {
+            left: 0;
+            visibility: visible; /* Show when open */
+        }
+
+        .sidebar h2 {
+            color: #f4f4f4;
+            margin-bottom: 20px;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #f4f4f4;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #159643;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
+    <i class="fas fa-cog cog-icon" onclick="toggleSidebar()"></i>
+    <div class="sidebar" id="sidebar">
+        <h2>Settings</h2>
+        <div class="toggle-switch">
+            <span>Turn off singles</span>
+            <label class="switch">
+                <input type="checkbox" id="singlesToggle" onchange="toggleSingles()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-switch">
+            <span>Turn off skits</span>
+            <label class="switch">
+                <input type="checkbox" id="skitsToggle" onchange="toggleSkits()">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
     <h1 id="artistTitle"></h1>
 
     <div class="loading" id="loadingIndicator">
@@ -222,6 +334,8 @@
         }
 
         async function loadSongs() {
+            const isSkitsMode = body.classList.contains('skits-mode');
+            const isSinglesMode = body.classList.contains('singles-mode');
             const ArtistName = getArtistFromURL();
             console.log("Extracted Artist Name:", ArtistName);  // Debugging: Logs the artist name
 
@@ -233,6 +347,18 @@
             const storedData = localStorage.getItem(ArtistName);
             if (storedData) {
                 songsData = JSON.parse(storedData);
+                if (isSkitsMode){
+                    songsData = songsData.filter(song => {
+                        // Filter out songs with "skit" in the name or songs shorter than 60 seconds
+                        return !song.name.toLowerCase().includes("skit") && song.duration >= 60;
+                    });
+                }
+                if(isSinglesMode){
+                    songsData = songsData.filter(song => {
+                        // Filter out songs that have "single" or "track" in the type
+                        return !song.type.toLowerCase().includes("single") && !song.type.toLowerCase().includes("track");
+                    });
+                }
                 correctSong = songsData[Math.floor(Math.random() * songsData.length)];
                 displaySongs();
                 document.getElementById('loadingIndicator').style.display = 'none';
@@ -445,6 +571,40 @@
             console.log("Correct Song is: " + correctSong.Song);
         }
 
+        function toggleSingles(){
+            const body = document.body;
+            body.classList.toggle('singles-mode');
+            const isSinglesMode = body.classList.contains('singles-mode');
+            localStorage.setItem('singlesMode', isSinglesMode);
+            loadSongs();
+        }
+
+        function checkSinglesModePreference() {
+            const isSinglesMode = localStorage.getItem('singlesMode') === 'true';
+            if (isSinglesMode) {
+                document.body.classList.add('singles-mode');
+                document.getElementById('singlesModeToggle').checked = true;
+            }
+        }
+
+        function toggleSkits(){
+            const body = document.body;
+            body.classList.toggle('skits-mode');
+            const isSkitsMode = body.classList.contains('skits-mode');
+            localStorage.setItem('skitsMode', isSkitsMode);
+            loadSongs();
+        }
+
+        function checkSkitsModePreference() {
+            const isSkitsMode = localStorage.getItem('skitsMode') === 'true';
+            if (isSkitsMode) {
+                document.body.classList.add('skits-mode');
+                document.getElementById('skitsModeToggle').checked = true;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', checkSinglesModePreference);
+        document.addEventListener('DOMContentLoaded', checkSkitsModePreference);
 
         // Initialize songs on page load
         document.addEventListener('DOMContentLoaded', loadSongs);
