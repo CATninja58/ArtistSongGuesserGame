@@ -238,7 +238,7 @@
                 document.getElementById('loadingIndicator').style.display = 'none';
                 document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
                 console.log("Finished loading data.");
-                console.log("Correct Song is: " + correctSong.song);
+                console.log("Correct Song is: " + correctSong.Song);
                 return;
             }
 
@@ -252,7 +252,7 @@
             document.getElementById('loadingIndicator').style.display = 'none';
 
             console.log("Finished loading data.");
-            console.log("Correct Song is: " + correctSong.song);
+            console.log("Correct Song is: " + correctSong.Song);
         }
 
         function showHint() {
@@ -426,12 +426,13 @@
             document.getElementById("searchResults").innerHTML = '';
 
             // Reload the songs using the stored data
+            const ArtistName = getArtistFromURL();
+            const storedData = localStorage.getItem(ArtistName);
             songsData = JSON.parse(storedData);
-                correctSong = songsData[Math.floor(Math.random() * songsData.length)];
-                displaySongs();
-                console.log("Finished loading data.");
-                console.log("Correct Song is: " + correctSong.Song);
-                return;
+            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+            displaySongs();
+            console.log("Finished loading data.");
+            console.log("Correct Song is: " + correctSong.Song);
         }
 
 
