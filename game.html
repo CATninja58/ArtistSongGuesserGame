@@ -348,6 +348,64 @@
             const isSinglesMode = localStorage.getItem('singlesMode') === 'true';
             const isLyricsMode = localStorage.getItem('lyricsMode') === 'true';
             const ArtistName = getArtistFromURL();
+
+            console.log("Extracted Artist Name:", ArtistName);
+
+            if (!ArtistName) {
+                document.body.innerHTML = "<h1>Error: No artist selected</h1>";
+                return;
+            }
+
+            // Try to get stored data
+            const storedData = localStorage.getItem(ArtistName);
+            if (storedData) {
+                songsData = JSON.parse(storedData) || [];
+            } else {
+                document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;
+                document.getElementById('loadingIndicator').style.display = 'flex';
+
+                songsData = await findDataFromArtist(ArtistName) || [];
+                localStorage.setItem(ArtistName, JSON.stringify(songsData));
+
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+
+            // Filter Songs
+            if (isSkitsMode) {
+                songsData = songsData.filter(song => !song.Song.toLowerCase().includes("skit") && song.Length >= 60);
+            }
+            if (isSinglesMode) {
+                songsData = songsData.filter(song => !song.Type.toLowerCase().includes("single"));
+            }
+            if (isLyricsMode) {
+                songsData = songsData.filter(song => song.lyrics && song.lyrics.split('\n').some(line => line.trim() !== ""));
+            }
+
+            // If no songs remain, show error
+            if (songsData.length === 0) {
+                console.error("Error: No songs left after filtering!");
+                document.body.innerHTML = "<h1>Error: No songs available for this artist!</h1>";
+                return;
+            }
+
+            // Pick a random correct song
+            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
+
+            if (!correctSong) {
+                console.error("Error: correctSong is undefined!");
+                return;
+            }
+
+            console.log("Correct Song is: " + correctSong.Song);
+            displaySongs();
+        }
+
+
+        async function loadSongs() {
+            const isSkitsMode = localStorage.getItem('skitsMode') === 'true';
+            const isSinglesMode = localStorage.getItem('singlesMode') === 'true';
+            const isLyricsMode = localStorage.getItem('lyricsMode') === 'true';
+            const ArtistName = getArtistFromURL();
             console.log("Extracted Artist Name:", ArtistName);  // Debugging: Logs the artist name
 
             if (!ArtistName) {
