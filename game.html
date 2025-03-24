@@ -369,7 +369,7 @@
                     });
                 }
                 if(isLyricsMode){
-                        const lines = song.lyrics ? song.lyrics.split('\n').filter(line => line.trim() !== "") : [];
+                    songsData = songsData.filter(song => {
                         lines = song.lyrics.split('\n').filter(line => line.trim() !== "");
                         // Filter out songs that don't have lyrics
                         return lines.length > 0;
