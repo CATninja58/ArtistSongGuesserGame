@@ -122,6 +122,8 @@
             100% { transform: rotate(360deg); }
         }
 
+
+
         /* Cog icon styles */
         .cog-icon {
             position: fixed;
@@ -234,6 +236,13 @@
                 <span class="slider"></span>
             </label>
         </div>
+        <div class="toggle-switch">
+            <span>Remove songs with no lyrics</span>
+            <label class="switch">
+                <input type="checkbox" id="lyricsToggle" onchange="toggleLyrics()">
+                <span class="slider"></span>
+            </label>
+        </div>
     </div>
 
     <h1 id="artistTitle"></h1>
@@ -336,6 +345,7 @@
         async function loadSongs() {
             const isSkitsMode = body.classList.contains('skits-mode');
             const isSinglesMode = body.classList.contains('singles-mode');
+            const isLyricsMode = body.classList.contains('lyrics-mode');
             const ArtistName = getArtistFromURL();
             console.log("Extracted Artist Name:", ArtistName);  // Debugging: Logs the artist name
 
@@ -355,8 +365,16 @@
                 }
                 if(isSinglesMode){
                     songsData = songsData.filter(song => {
-                        // Filter out songs that have "single" or "track" in the type
+                        // Filter out songs that have "single" in the type
                         return !song.type.toLowerCase().includes("single");
+                    });
+                }
+                if(isLyricsMode){
+                    
+                    songsData = songsData.filter(song => {
+                        lines = song.lyrics.split('\n').filter(line => line.trim() !== "");
+                        // Filter out songs that don't have lyrics
+                        return lines.length > 0;
                     });
                 }
                 correctSong = songsData[Math.floor(Math.random() * songsData.length)];
@@ -402,7 +420,7 @@
                         if (lines.length > 0) {
                             let randomLine = lines[Math.floor(Math.random() * lines.length)];
                             // Check if the line contains a section label like [Verse 1]
-                            while (randomLine.includes("[") || randomLine.includes("]")) {
+                            while (randomLine.includes("[") || randomLine.includes("]") || randomLine.length < 10){
                                 randomLine = lines[Math.floor(Math.random() * lines.length)];
                             }
                             hintText.innerText = `Hint: "${randomLine}"`;
@@ -571,6 +589,20 @@
             console.log("Correct Song is: " + correctSong.Song);
         }
 
+        // Function to toggle the sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+            if (!sidebar.classList.contains('open')) {
+                // Wait for the transition to complete before hiding
+                setTimeout(() => {
+                    sidebar.style.visibility = 'hidden';
+                }, 300); // Match the transition duration
+            } else {
+                sidebar.style.visibility = 'visible';
+            }
+        }
+
         function toggleSingles(){
             const body = document.body;
             body.classList.toggle('singles-mode');
@@ -602,9 +634,26 @@
                 document.getElementById('skitsModeToggle').checked = true;
             }
         }
+
+        function toggleLyrics(){
+            const body = document.body;
+            body.classList.toggle('lyrics-mode');
+            const isLyricsMode = body.classList.contains('lyrics-mode');
+            localStorage.setItem('lyricsMode', isLyricsMode);
+            loadSongs();
+        }
+
+        function checkLyricsModePreference() {
+            const isLyricsMode = localStorage.getItem('lyricsMode') === 'true';
+            if (isLyricsMode) {
+                document.body.classList.add('lyrics-mode');
+                document.getElementById('lyricsModeToggle').checked = true;
+            }
+        }
         
         document.addEventListener('DOMContentLoaded', checkSinglesModePreference);
         document.addEventListener('DOMContentLoaded', checkSkitsModePreference);
+        document.addEventListener('DOMContentLoaded', checkLyricsModePreference);
 
         // Initialize songs on page load
         document.addEventListener('DOMContentLoaded', loadSongs);
