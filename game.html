@@ -274,13 +274,17 @@
                         const lines = data.lyrics.split('\n').filter(line => line.trim() !== "");
                         console.log("Lines: ", lines);  // Debugging the lines array
                         if (lines.length > 0) {
-                            const randomLine = lines[Math.floor(Math.random() * lines.length)];
+                            let randomLine = lines[Math.floor(Math.random() * lines.length)];
+                            // Check if the line contains a section label like [Verse 1]
+                            while (randomLine.includes("[") || randomLine.includes("]")) {
+                                randomLine = lines[Math.floor(Math.random() * lines.length)];
+                            }
                             hintText.innerText = `Hint: "${randomLine}"`;
                         } else {
                             hintText.innerText = "No lyrics available for this song.";
                         }
                     } else {
-                        hintText.innerText = "Lyrics not found.";
+                        hintText.innerText = "No lyrics available for this song.";
                     }
                 })
                 .catch(() => {
