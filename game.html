@@ -287,7 +287,8 @@
     <script>
         let guesses = [];
         let guessCount = 0;
-        let songsData = null
+        let songsData = null;
+        let correctSong = null;
 
         function getArtistFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -359,19 +360,16 @@
                 songsData = JSON.parse(storedData);
                 if (isSkitsMode){
                     songsData = songsData.filter(song => {
-                        // Filter out songs with "skit" in the name or songs shorter than 60 seconds
-                        return !song.name.toLowerCase().includes("skit") && song.duration >= 60;
+                        return !song.Song.toLowerCase().includes("skit") && song.Length >= 60;
                     });
                 }
                 if(isSinglesMode){
                     songsData = songsData.filter(song => {
-                        // Filter out songs that have "single" in the type
-                        return !song.type.toLowerCase().includes("single");
+                        return !song.Type.toLowerCase().includes("single");
                     });
                 }
                 if(isLyricsMode){
-                    
-                    songsData = songsData.filter(song => {
+                        const lines = song.lyrics ? song.lyrics.split('\n').filter(line => line.trim() !== "") : [];
                         lines = song.lyrics.split('\n').filter(line => line.trim() !== "");
                         // Filter out songs that don't have lyrics
                         return lines.length > 0;
@@ -379,6 +377,7 @@
                 }
                 correctSong = songsData[Math.floor(Math.random() * songsData.length)];
                 displaySongs();
+                document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;
                 document.getElementById('loadingIndicator').style.display = 'none';
                 document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
                 console.log("Finished loading data.");
@@ -615,7 +614,7 @@
             const isSinglesMode = localStorage.getItem('singlesMode') === 'true';
             if (isSinglesMode) {
                 document.body.classList.add('singles-mode');
-                document.getElementById('singlesModeToggle').checked = true;
+                document.getElementById('singlesToggle').checked = true;
             }
         }
 
@@ -631,7 +630,7 @@
             const isSkitsMode = localStorage.getItem('skitsMode') === 'true';
             if (isSkitsMode) {
                 document.body.classList.add('skits-mode');
-                document.getElementById('skitsModeToggle').checked = true;
+                document.getElementById('skitsToggle').checked = true;
             }
         }
 
@@ -647,7 +646,7 @@
             const isLyricsMode = localStorage.getItem('lyricsMode') === 'true';
             if (isLyricsMode) {
                 document.body.classList.add('lyrics-mode');
-                document.getElementById('lyricsModeToggle').checked = true;
+                document.getElementById('lyricsToggle').checked = true;
             }
         }
         
