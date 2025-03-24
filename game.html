@@ -424,6 +424,12 @@
             // Reset the song list and search results
             document.getElementById("songList").innerHTML = '';
             document.getElementById("searchResults").innerHTML = '';
+            
+            //Reset hint button
+            const hintButton = document.getElementById("hintButton");
+            const hintText = document.getElementById("hintText");
+            hintButton.style.display = "inline-block";  // Make the hint button visible again
+            hintText.style.display = "none";  // Hide the hint text
 
             // Reload the songs using the stored data
             const ArtistName = getArtistFromURL();
