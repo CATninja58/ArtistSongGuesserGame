@@ -356,7 +356,7 @@
                 if(isSinglesMode){
                     songsData = songsData.filter(song => {
                         // Filter out songs that have "single" or "track" in the type
-                        return !song.type.toLowerCase().includes("single") && !song.type.toLowerCase().includes("track");
+                        return !song.type.toLowerCase().includes("single");
                     });
                 }
                 correctSong = songsData[Math.floor(Math.random() * songsData.length)];
