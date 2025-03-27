@@ -256,6 +256,8 @@
     <button id="hintButton" onclick="showHint()">Get a Hint</button>
     <div id="hintText" style="display:none; font-style: italic; margin-top: 10px;"></div>
 
+    <button id="playButton" onclick="playSnippet()">Play 3 seconds</button>
+
     <input type="text" id="songSearch" placeholder="Enter song name" oninput="searchSong()">
     <div id="searchResults"></div>
 
@@ -341,6 +343,23 @@
             });
 
             return Array.from(songMap.values());
+        }
+
+        function playSnippet() {
+            if (!correctSong || !correctSong.previewUrl) {
+                alert("No audio snippet available for this song!");
+                return;
+            }
+
+            if (audioSnippet) {
+                audioSnippet.pause();
+                audioSnippet.currentTime = 0;
+            }
+
+            audioSnippet = new Audio(correctSong.previewUrl);
+            const randomStart = Math.random() * Math.max(0, audioSnippet.duration - 3);
+            audioSnippet.currentTime = randomStart; // Play a random 3-second snippet
+            audioSnippet.play();
         }
 
         async function loadSongs() {
