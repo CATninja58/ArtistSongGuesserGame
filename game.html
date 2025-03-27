@@ -303,8 +303,8 @@
             const searchData = await searchResponse.json();
 
             if (searchData.resultCount === 0) {
-                console.error("Artist not found.");
-                return [];
+            console.error("Artist not found.");
+            return [];
             }
 
             const artistId = searchData.results[0].artistId;
@@ -317,29 +317,30 @@
             let songsList = [];
 
             for (const album of albums) {
-                const tracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
-                const tracksResponse = await fetch(tracksUrl);
-                const tracksData = await tracksResponse.json();
+            const tracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
+            const tracksResponse = await fetch(tracksUrl);
+            const tracksData = await tracksResponse.json();
 
-                const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
-                    Song: track.trackName.replace(/\s*\(.*?\)\s*/g, '').trim(),
-                    Album: album.collectionName,
-                    Year: new Date(album.releaseDate).getFullYear(),
-                    Length: (track.trackTimeMillis / 1000).toFixed(0), // Convert ms to seconds
-                    Artist: track.artistName,
-                    TrackNum: track.trackNumber,
-                    Type: album.collectionType === "Album" ? "Track" : "Single"
-                }));
+            const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
+                Song: track.trackName.replace(/\s*\(.*?\)\s*/g, '').trim(),
+                Album: album.collectionName,
+                Year: new Date(album.releaseDate).getFullYear(),
+                Length: (track.trackTimeMillis / 1000).toFixed(0), // Convert ms to seconds
+                Artist: track.artistName,
+                TrackNum: track.trackNumber,
+                Type: album.collectionType === "Album" ? "Track" : "Single",
+                previewUrl: track.previewUrl // Add the preview URL for the audio snippet
+            }));
 
-                songsList = songsList.concat(tracks);
+            songsList = songsList.concat(tracks);
             }
 
             // Remove duplicate songs
             const songMap = new Map();
             songsList.forEach(song => {
-                if (!songMap.has(song.Song)) {
-                    songMap.set(song.Song, song);
-                }
+            if (!songMap.has(song.Song)) {
+                songMap.set(song.Song, song);
+            }
             });
 
             return Array.from(songMap.values());
@@ -347,174 +348,12 @@
 
         function playSnippet() {
             if (!correctSong || !correctSong.previewUrl) {
-                alert("No audio snippet available for this song!");
-                return;
+            alert("No audio snippet available for this song!");
+            return;
             }
 
-            if (audioSnippet) {
-                audioSnippet.pause();
-                audioSnippet.currentTime = 0;
-            }
-
-            audioSnippet = new Audio(correctSong.previewUrl);
-            const randomStart = Math.random() * Math.max(0, audioSnippet.duration - 3);
-            audioSnippet.currentTime = randomStart; // Play a random 3-second snippet
+            const audioSnippet = new Audio(correctSong.previewUrl);
             audioSnippet.play();
-        }
-
-        async function loadSongs() {
-            const isSkitsMode = localStorage.getItem('skitsMode') === 'true';
-            const isSinglesMode = localStorage.getItem('singlesMode') === 'true';
-            const isLyricsMode = localStorage.getItem('lyricsMode') === 'true';
-            const ArtistName = getArtistFromURL();
-
-            console.log("Extracted Artist Name:", ArtistName);
-
-            if (!ArtistName) {
-                document.body.innerHTML = "<h1>Error: No artist selected</h1>";
-                return;
-            }
-
-            // Try to get stored data
-            const storedData = localStorage.getItem(ArtistName);
-            if (storedData) {
-                songsData = JSON.parse(storedData) || [];
-            } else {
-                document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;
-                document.getElementById('loadingIndicator').style.display = 'flex';
-
-                songsData = await findDataFromArtist(ArtistName) || [];
-                localStorage.setItem(ArtistName, JSON.stringify(songsData));
-
-                document.getElementById('loadingIndicator').style.display = 'none';
-            }
-
-            // Filter Songs
-            if (isSkitsMode) {
-                songsData = songsData.filter(song => !song.Song.toLowerCase().includes("skit") && song.Length >= 60);
-            }
-            if (isSinglesMode) {
-                songsData = songsData.filter(song => !song.Type.toLowerCase().includes("single"));
-            }
-            if (isLyricsMode) {
-                songsData = songsData.filter(song => song.lyrics && song.lyrics.split('\n').some(line => line.trim() !== ""));
-            }
-
-            // If no songs remain, show error
-            if (songsData.length === 0) {
-                console.error("Error: No songs left after filtering!");
-                document.body.innerHTML = "<h1>Error: No songs available for this artist!</h1>";
-                return;
-            }
-
-            // Pick a random correct song
-            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
-
-            if (!correctSong) {
-                console.error("Error: correctSong is undefined!");
-                return;
-            }
-
-            console.log("Correct Song is: " + correctSong.Song);
-            displaySongs();
-        }
-
-
-        async function loadSongs() {
-            const isSkitsMode = localStorage.getItem('skitsMode') === 'true';
-            const isSinglesMode = localStorage.getItem('singlesMode') === 'true';
-            const isLyricsMode = localStorage.getItem('lyricsMode') === 'true';
-            const ArtistName = getArtistFromURL();
-            console.log("Extracted Artist Name:", ArtistName);  // Debugging: Logs the artist name
-
-            if (!ArtistName) {
-                document.body.innerHTML = "<h1>Error: No artist selected</h1>";
-                return;
-            }
-
-            const storedData = localStorage.getItem(ArtistName);
-            if (storedData) {
-                songsData = JSON.parse(storedData);
-                if (isSkitsMode){
-                    songsData = songsData.filter(song => {
-                        return !song.Song.toLowerCase().includes("skit") && song.Length >= 60;
-                    });
-                }
-                if(isSinglesMode){
-                    songsData = songsData.filter(song => {
-                        return !song.Type.toLowerCase().includes("single");
-                    });
-                }
-                if(isLyricsMode){
-                    songsData = songsData.filter(song => {
-                        if (!song.lyrics) return false;
-                        const lines = song.lyrics.split('\n').filter(line => line.trim() !== "");
-                        // Filter out songs that don't have lyrics
-                        return lines.length > 0;
-                    });
-                }
-                correctSong = songsData[Math.floor(Math.random() * songsData.length)];
-                displaySongs();
-                document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;
-                document.getElementById('loadingIndicator').style.display = 'none';
-                document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
-                console.log("Finished loading data.");
-                console.log("Correct Song is: " + correctSong.Song);
-                return;
-            }
-
-            document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
-
-            document.getElementById('loadingIndicator').style.display = 'flex';
-            songsData = await findDataFromArtist(ArtistName);
-            localStorage.setItem(ArtistName, JSON.stringify(songsData));
-            correctSong = songsData[Math.floor(Math.random() * songsData.length)];
-            displaySongs();
-            document.getElementById('loadingIndicator').style.display = 'none';
-
-            console.log("Finished loading data.");
-            console.log("Correct Song is: " + correctSong.Song);
-        }
-
-        function showHint() {
-            const hintButton = document.getElementById("hintButton");
-            const hintText = document.getElementById("hintText");
-
-            if (!correctSong) {
-                alert("No correct song selected yet!");
-                return;
-            }
-
-            // Reset the hint text area before fetching new hint
-            hintText.innerText = "Loading hint...";
-
-            fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(correctSong.Artist)}/${encodeURIComponent(correctSong.Song)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.lyrics) {
-                        const lines = data.lyrics.split('\n').filter(line => line.trim() !== "");
-                        console.log("Lines: ", lines);  // Debugging the lines array
-                        if (lines.length > 0) {
-                            let randomLine = lines[Math.floor(Math.random() * lines.length)];
-                            // Check if the line contains a section label like [Verse 1]
-                            while (randomLine.includes("[") || randomLine.includes("]") || randomLine.length < 10){
-                                randomLine = lines[Math.floor(Math.random() * lines.length)];
-                            }
-                            hintText.innerText = `Hint: "${randomLine}"`;
-                        } else {
-                            hintText.innerText = "No lyrics available for this song.";
-                        }
-                    } else {
-                        hintText.innerText = "No lyrics available for this song.";
-                    }
-                })
-                .catch(() => {
-                    hintText.innerText = "Error fetching lyrics.";
-                });
-
-            // Hide the hint button and show the hint text
-            hintButton.style.display = "none";
-            hintText.style.display = "block";
         }
 
 
