@@ -609,14 +609,14 @@
                 const correctYear = parseInt(correctValue);
                 const diff = Math.abs(guessYear - correctYear);
                 if (diff === 0) return 'correct';
-                if (diff <= 1) return guessYear > correctYear ? 'close v' : 'close ^';
+                if (diff <= 5) return guessYear > correctYear ? 'close v' : 'close ^';
                 return guessYear < correctYear ? 'later ^' : 'earlier v';
             } else if (category === 'Length') {
                 const guessLength = parseInt(guessValue);
                 const correctLength = parseInt(correctValue);
                 const diff = Math.abs(guessLength - correctLength);
                 if (diff === 0) return 'correct';
-                if (diff <= 30) return guessLength < correctLength ? 'close v' : 'close ^';
+                if (diff <= 50) return guessLength < correctLength ? 'close v' : 'close ^';
                 return guessLength > correctLength ? 'shorter v' : 'longer ^';
             } else if (category === 'TrackNum'){
                 const guessTrackNum = parseInt(guessValue);
