@@ -269,13 +269,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="min-width: 300px;">Song</th>
-                        <th style="min-width: 200px;">Album</th>
-                        <th style="min-width: 250px;">Release</th>
-                        <th style="min-width: 200px;">Length</th>
-                        <th style="min-width: 200px;">Artist</th>
-                        <th style="min-width: 200px;">TrackNum</th>
-                        <th style="min-width: 200px;">Type</th>
+                        <th style="min-width: 300px;" onclick="sortTable('Song')">Song <span id="SongSortIndicator"></span></th>
+                        <th style="min-width: 200px;" onclick="sortTable('Album')">Album <span id="AlbumSortIndicator"></span></th>
+                        <th style="min-width: 250px;" onclick="sortTable('Year')">Release <span id="YearSortIndicator"></span></th>
+                        <th style="min-width: 200px;" onclick="sortTable('Length')">Length <span id="LengthSortIndicator"></span></th>
+                        <th style="min-width: 200px;" onclick="sortTable('Artist')">Artist <span id="ArtistSortIndicator"></span></th>
+                        <th style="min-width: 200px;" onclick="sortTable('TrackNum')">TrackNum <span id="TrackNumSortIndicator"></span></th>
+                        <th style="min-width: 200px;" onclick="sortTable('Type')">Type <span id="TypeSortIndicator"></span></th>
                     </tr>
                 </thead>
                 <tbody id="songList"></tbody>
@@ -289,6 +289,8 @@
         let guessCount = 0;
         let songsData = null;
         let correctSong = null;
+        let currentSortColumn = null;
+        let sortAscending = true;
 
         function getArtistFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -457,41 +459,77 @@
             console.log("Correct Song is: " + correctSong.Song);
         }
 
+        function sortTable(column) {
+            if (currentSortColumn === column) {
+                sortAscending = !sortAscending; // Toggle sort direction
+            } else {
+                currentSortColumn = column;
+                sortAscending = true; // Default to ascending
+            }
+
+            // Clear all sort indicators
+            document.querySelectorAll("thead th span").forEach(span => span.textContent = "");
+
+            // Set the sort indicator for the current column
+            const indicator = document.getElementById(`${column}SortIndicator`);
+            indicator.textContent = sortAscending ? "v" : "^";
+
+            // Sort the songsData array
+            songsData.sort((a, b) => {
+                if (column === "Year" || column === "Length" || column === "TrackNum") {
+                    return sortAscending ? a[column] - b[column] : b[column] - a[column];
+                } else {
+                    return sortAscending
+                        ? a[column].localeCompare(b[column])
+                        : b[column].localeCompare(a[column]);
+                }
+            });
+
+            // Re-render the table
+            displaySongs();
+        }
+
         function showHint() {
             const hintButton = document.getElementById("hintButton");
             const hintText = document.getElementById("hintText");
 
             if (!correctSong) {
-                alert("No correct song selected yet!");
-                return;
+            alert("No correct song selected yet!");
+            return;
             }
 
             // Reset the hint text area before fetching new hint
             hintText.innerText = "Loading hint...";
 
             fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(correctSong.Artist)}/${encodeURIComponent(correctSong.Song)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.lyrics) {
-                        const lines = data.lyrics.split('\n').filter(line => line.trim() !== "");
-                        console.log("Lines: ", lines);  // Debugging the lines array
-                        if (lines.length > 0) {
-                            let randomLine = lines[Math.floor(Math.random() * lines.length)];
-                            // Check if the line contains a section label like [Verse 1]
-                            while (randomLine.includes("[") || randomLine.includes("]") || randomLine.length < 10){
-                                randomLine = lines[Math.floor(Math.random() * lines.length)];
-                            }
-                            hintText.innerText = `Hint: "${randomLine}"`;
-                        } else {
-                            hintText.innerText = "No lyrics available for this song.";
-                        }
-                    } else {
-                        hintText.innerText = "No lyrics available for this song.";
+            .then(response => response.json())
+            .then(data => {
+                if (data.lyrics) {
+                const lines = data.lyrics.split('\n').filter(line => line.trim() !== "");
+                console.log("Lines: ", lines);  // Debugging the lines array
+                if (lines.length > 1) {
+                    let randomIndex = Math.floor(Math.random() * (lines.length - 1));
+                    let line1 = lines[randomIndex];
+                    let line2 = lines[randomIndex + 1];
+
+                    // Ensure the lines are valid and do not contain section labels like [Verse 1]
+                    while ((line1.includes("[") || line1.includes("]") || line1.length < 10) && randomIndex < lines.length - 1) {
+                    randomIndex = Math.floor(Math.random() * (lines.length - 1));
+                    line1 = lines[randomIndex];
+                    line2 = lines[randomIndex + 1];
                     }
-                })
-                .catch(() => {
-                    hintText.innerText = "Error fetching lyrics.";
-                });
+
+                    hintText.innerText = `Hint:\n"${line1}"\n"${line2}"`;
+                } else {
+                    hintText.innerText = "Not enough lyrics available for this song.";
+                }
+                } else {
+                hintText.innerText = "No lyrics available for this song.";
+                }
+            })
+            .catch(() => {
+                hintText.innerText = "Error fetching lyrics.";
+            });
 
             // Hide the hint button and show the hint text
             hintButton.style.display = "none";
@@ -579,7 +617,7 @@
                 const diff = Math.abs(guessLength - correctLength);
                 if (diff === 0) return 'correct';
                 if (diff <= 30) return guessLength < correctLength ? 'close v' : 'close ^';
-                return guessLength < correctLength ? 'shorter v' : 'longer ^';
+                return guessLength > correctLength ? 'shorter v' : 'longer ^';
             } else if (category === 'TrackNum'){
                 const guessTrackNum = parseInt(guessValue);
                 const correctTrackNum = parseInt(correctValue);
