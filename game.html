@@ -293,6 +293,7 @@
         let currentSortColumn = null;
         let sortAscending = true;
         let songAudio = null;
+        let snippetStartTime = null; // Variable to store the random start time for the current song
 
         function getArtistFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -337,7 +338,7 @@
                     Artist: track.artistName,
                     TrackNum: track.trackNumber,
                     Type: album.collectionType === "Album" ? "Track" : "Single",
-                    Audio: snippetUrl
+                    audioURL: snippetUrl
                 }));
 
                 songsList = songsList.concat(tracks);
@@ -465,11 +466,25 @@
 
             console.log("Finished loading data.");
             console.log("Correct Song is: " + correctSong.Song);
+            console.log("Song data: ", correctSong);  // Debugging: Logs the correct song data
+            console.log("All songs data: ", songsData);  // Debugging: Logs all song data
         }
 
         function getSongSnippet() {
-            songAudio = new Audio(correctSong.Audio);
+            if (!snippetStartTime || correctSong.Song !== songAudio?.currentSong) {
+            // Generate a new random start time if it's a new song or no snippet has been set
+            snippetStartTime = Math.floor(Math.random() * 27); // Random time between 0 and 27 seconds
+            }
+
+            songAudio = new Audio(correctSong.audioURL);
+            songAudio.currentTime = snippetStartTime; // Set the start time
+            songAudio.currentSong = correctSong.Song; // Track the current song
             songAudio.play();
+
+            // Stop the audio after 3 seconds
+            setTimeout(() => {
+            songAudio.pause();
+            }, 3000);
         }
 
         function sortTable(column) {
