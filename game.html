@@ -318,23 +318,24 @@
             let albums = albumsData.results.filter(item => item.collectionType === "Album");
 
             let songsList = [];
-            
 
             for (const album of albums) {
                 const tracksUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
                 const tracksResponse = await fetch(tracksUrl);
                 const tracksData = await tracksResponse.json();
 
-                const tracks = tracksData.results.filter(item => item.wrapperType === "track").map(track => ({
-                    Song: track.trackName.replace(/\s*\(.*?\)\s*/g, '').trim(),
-                    Album: album.collectionName,
-                    Year: new Date(album.releaseDate).getFullYear(),
-                    Length: (track.trackTimeMillis / 1000).toFixed(0), // Convert ms to seconds
-                    Artist: track.artistName,
-                    TrackNum: track.trackNumber,
-                    Type: album.collectionType === "Album" ? "Track" : "Single",
-                    audioURL: track.previewUrl 
-                }));
+                const tracks = tracksData.results
+                    .filter(item => item.wrapperType === "track" && item.previewUrl) // <-- FIXED: filter only songs with audio preview
+                    .map(track => ({
+                        Song: track.trackName.replace(/\s*\(.*?\)\s*/g, '').trim(),
+                        Album: album.collectionName,
+                        Year: new Date(album.releaseDate).getFullYear(),
+                        Length: (track.trackTimeMillis / 1000).toFixed(0),
+                        Artist: track.artistName,
+                        TrackNum: track.trackNumber,
+                        Type: album.collectionType === "Album" ? "Track" : "Single",
+                        audioURL: track.previewUrl
+                    }));
 
                 songsList = songsList.concat(tracks);
             }
@@ -349,6 +350,7 @@
 
             return Array.from(songMap.values());
         }
+
 
         async function loadSongs() {
             const isSkitsMode = localStorage.getItem('skitsMode') === 'true';
@@ -420,6 +422,11 @@
 
             console.log("Correct song object:", correctSong);
             console.log("Audio URL:", correctSong.audioURL);
+
+            if (!correctSong.audioURL) {
+                alert("This song does not have an available audio preview.");
+                return;
+            }
 
             songAudio = new Audio(correctSong.audioURL);
             songAudio.currentSong = correctSong.Song;
