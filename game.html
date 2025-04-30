@@ -452,6 +452,8 @@
                 document.getElementById("artistTitle").innerText = `${ArtistName}'s Song Guesser`;  // Fixed here
                 console.log("Finished loading data.");
                 console.log("Correct Song is: " + correctSong.Song);
+                console.log("Song data: ", correctSong);  // Debugging: Logs the correct song data
+                console.log("All songs data: ", songsData);  // Debugging: Logs all song data
                 return;
             }
 
@@ -479,6 +481,7 @@
             songAudio = new Audio(correctSong.audioURL);
             songAudio.currentTime = snippetStartTime; // Set the start time
             songAudio.currentSong = correctSong.Song; // Track the current song
+            console.log("Playing snippet from: " + snippetStartTime + " seconds");
             songAudio.play();
 
             // Stop the audio after 3 seconds
