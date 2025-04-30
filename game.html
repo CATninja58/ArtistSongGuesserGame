@@ -392,6 +392,7 @@
                 console.log("Correct Song is: " + correctSong.Song);
                 console.log("Song data: ", correctSong);  // Debugging: Logs the correct song data
                 console.log("All songs data: ", songsData);  // Debugging: Logs all song data
+                console.log("Audio URL:", correctSong.audioURL);
                 return;
             }
 
@@ -411,32 +412,39 @@
         }
 
         function getSongSnippet() {
-            // If a song is already playing, stop it
             if (songAudio) {
                 songAudio.pause();
                 songAudio.src = "";
                 songAudio = null;
             }
 
-            // Create new audio object
+            console.log("Correct song object:", correctSong);
+            console.log("Audio URL:", correctSong.audioURL);
+
             songAudio = new Audio(correctSong.audioURL);
             songAudio.currentSong = correctSong.Song;
 
+            songAudio.addEventListener("error", (e) => {
+                console.error("Audio error:", e);
+            });
+
             songAudio.addEventListener("loadedmetadata", () => {
-                // Pick a snippet only after we know the duration
                 const duration = songAudio.duration;
                 snippetStartTime = Math.floor(Math.random() * Math.max(0, duration - 3));
                 songAudio.currentTime = snippetStartTime;
 
                 console.log("Playing snippet from:", snippetStartTime, "seconds");
-                songAudio.play();
 
-                // Stop after 3 seconds
+                songAudio.play().catch(err => {
+                    console.error("Play failed:", err);
+                });
+
                 setTimeout(() => {
                     songAudio.pause();
                 }, 3000);
-            }, { once: true }); // Add listener only once
+            }, { once: true });
         }
+
 
         function sortTable(column) {
             if (currentSortColumn === column) {
