@@ -350,6 +350,7 @@
             console.log("Finished loading data.");
             console.log("Correct Song is: " + correctSong.Song);
             console.log("Song data: ", correctSong);  // Debugging: Logs the correct song data
+            document.getElementById('loadingIndicator').style.display = 'none';
         }
 
         function forceArtistDataRedownload() {
